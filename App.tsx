@@ -1,115 +1,44 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import React, { useState } from 'react';
+import { View, Text, Image, Button } from 'react-native';
+import ImagePicker from 'react-native-image-picker';
+import TesseractOcr, { LANG_ENGLISH, LEVEL_WORD } from 'react-native-tesseract-ocr';
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
-import { AppBar, HStack, IconButton } from "@react-native-material/core";
+const App = () => {
+  const [imageSource, setImageSource] = useState(null);
+  const [extractedText, setExtractedText] = useState('');
 
+  const selectImage = () => {
+    ImagePicker.showImagePicker({ mediaType: 'photo' }, (response) => {
+      if (!response.didCancel) {
+        setImageSource(response.uri);
+        extractText(response.uri);
+      }
+    });
+  };
 
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+  const extractText = async (imageUri) => {
+    try {`  `
+      const tessOptions = {
+        whitelist: null,
+        blacklist: '1234567890',
+        level: LEVEL_WORD,
+        lang: LANG_ENGLISH,
+      };
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
-
-function Section({children, title}: SectionProps): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
-
-function App(): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+      const extracted = await TesseractOcr.recognize(imageUri, 'LANG_ENGLISH', tessOptions);
+      setExtractedText(extracted);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'dark-content' : 'light-content'}
-        animated={true}
-        backgroundColor="#3B008F"
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        {/* <Header /> */}
-        <AppBar
-    title="OCR App"
-    
-    
-  
-  />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-        {/*  */}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      {imageSource && <Image source={{ uri: imageSource }} style={{ width: 200, height: 200 }} />}
+      <Text>{extractedText}</Text>
+      <Button title="Select Image" onPress={selectImage} />
+    </View>
   );
-}
-
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
+};
 
 export default App;
